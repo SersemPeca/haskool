@@ -23,29 +23,40 @@ library
       Parser
       Parser.Types
       Regex.Atto
+      Typist
+      Typist.Types
+      Utils.Algorithms
       Utils.FS
       Utils.Pretty
       Utils.Pretty.Lexer
       Utils.Pretty.Parser
+      Utils.Pretty.Typist
   other-modules:
       Paths_haskool
   hs-source-dirs:
       lib
   default-extensions:
+      AllowAmbiguousTypes
       BlockArguments
       DataKinds
       DeriveAnyClass
+      DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
       ExplicitForAll
       ExplicitNamespaces
+      FlexibleContexts
+      GADTSyntax
       LambdaCase
       MultiWayIf
+      NoMonomorphismRestriction
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       RecordWildCards
       ScopedTypeVariables
       TemplateHaskell
+      TypeApplications
       TypeFamilies
       UndecidableInstances
       UnicodeSyntax
@@ -58,13 +69,17 @@ library
     , comonad
     , comonad-extras
     , containers
+    , deriving-compat
     , directory
     , extra
     , filepath
     , fixed-vector
+    , free
+    , generic-lens
     , lens
     , megaparsec
     , mtl
+    , nonempty-containers
     , parser-combinators
     , regex-tdfa
     , text
@@ -79,20 +94,27 @@ executable haskool
   hs-source-dirs:
       app
   default-extensions:
+      AllowAmbiguousTypes
       BlockArguments
       DataKinds
       DeriveAnyClass
+      DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
       ExplicitForAll
       ExplicitNamespaces
+      FlexibleContexts
+      GADTSyntax
       LambdaCase
       MultiWayIf
+      NoMonomorphismRestriction
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       RecordWildCards
       ScopedTypeVariables
       TemplateHaskell
+      TypeApplications
       TypeFamilies
       UndecidableInstances
       UnicodeSyntax
@@ -112,20 +134,27 @@ test-suite haskool-test
   hs-source-dirs:
       test
   default-extensions:
+      AllowAmbiguousTypes
       BlockArguments
       DataKinds
       DeriveAnyClass
+      DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
       ExplicitForAll
       ExplicitNamespaces
+      FlexibleContexts
+      GADTSyntax
       LambdaCase
       MultiWayIf
+      NoMonomorphismRestriction
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       RecordWildCards
       ScopedTypeVariables
       TemplateHaskell
+      TypeApplications
       TypeFamilies
       UndecidableInstances
       UnicodeSyntax

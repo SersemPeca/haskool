@@ -1,215 +1,215 @@
 module Parser.Types (
+  ExtraInfo (..),
   SBinding (..),
   SCaseProng (..),
   SProgram (..),
   SClass (..),
   SFeature (..),
   SFormal (..),
-  SExpr (..),
+  SExprF (..),
+  SExpr,
 )
 where
 
+import Control.Comonad.Cofree (Cofree (..))
+import Control.Lens (Lens', lens)
+import Data.Functor.Classes (Show1 (..))
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text qualified as T
+import GHC.Generics (Generic)
+
+-- import Text.Show.Deriving (deriveShow2, makeLiftShowsPrec)
 
 -- NOTE: Strings in COOL may only be up to 1024 characters
 -- Consider wrapping the SConstant type in Either
 -- TODO: There are more restrictions on strings which must be taken into account.
 -- https://theory.stanford.edu/~aiken/software/cool/cool-manual.pdf
 
-data SBinding where
-  SBinding ::
+data ExtraInfo where
+  ExtraInfo ::
     { endLine :: Int
+    , typeName :: Maybe T.Text
+    } ->
+    ExtraInfo
+  deriving stock (Generic, Show, Eq)
+
+data SBinding e where
+  SBinding ::
+    { extraInfo :: e
     , bidentifier :: T.Text
     , btype :: T.Text
-    , bbody :: Maybe SExpr
+    , bbody :: Maybe (SExpr e)
     } ->
-    SBinding
-  deriving stock (Show)
+    SBinding e
+  deriving stock (Generic, Show)
 
-data SCaseProng where
+data SCaseProng e where
   SCaseProng ::
-    { endLine :: Int
+    { extraInfo :: e
     , pidenifier :: T.Text
     , ptype :: T.Text
-    , pbody :: SExpr
+    , pbody :: SExpr e
     } ->
-    SCaseProng
-  deriving stock (Show)
+    SCaseProng e
+  deriving stock (Generic, Show)
 
-data SProgram where
+data SProgram e where
   SProgram ::
-    { endLine :: Int
-    , pclasses :: NonEmpty SClass
+    { extraInfo :: e
+    , pclasses :: NonEmpty (SClass e)
     } ->
-    SProgram
-  deriving stock (Show)
+    SProgram e
+  deriving stock (Generic, Show)
 
-data SClass where
+data SClass e where
   SClass ::
-    { endLine :: Int
+    { extraInfo :: e
     , name :: T.Text
     , parent :: Maybe T.Text
-    , features :: [SFeature]
+    , features :: [SFeature e]
     } ->
-    SClass
-  deriving stock (Show)
+    SClass e
+  deriving stock (Generic, Show)
 
-data SFeature where
+data SFeature e where
   SFeatureMember ::
-    { endLine :: Int
-    , fbinding :: SBinding
+    { extraInfo :: e
+    , fbinding :: SBinding e
     } ->
-    SFeature
+    SFeature e
   SFeatureMethod ::
-    { endLine :: Int
+    { extraInfo :: e
     , fidentifier :: T.Text
-    , fformals :: [SFormal]
+    , fformals :: [SFormal e]
     , ftype :: T.Text
-    , fbody :: SExpr
+    , fbody :: SExpr e
     } ->
-    SFeature
-  deriving stock (Show)
+    SFeature e
+  deriving stock (Generic, Show)
 
-data SFormal where
+data SFormal e where
   SFormal ::
-    { endLine :: Int
+    { extraInfo :: e
     , fidentifier :: T.Text
     , ftype :: T.Text
     } ->
-    SFormal
-  deriving stock (Show)
+    SFormal e
+  deriving stock (Generic, Show)
 
-data SExpr where
+type SExpr e = Cofree (SExprF e) e
+
+data SExprF e r where
   SEAssignment ::
-    { endLine :: Int
-    , aid :: T.Text
-    , abody :: SExpr
+    { aid :: T.Text
+    , abody :: r
     } ->
-    SExpr
+    SExprF e r
   SEMethodCall ::
-    { endLine :: Int
-    , mcallee :: SExpr
+    { mcallee :: r
     , mtype :: Maybe T.Text
     , mname :: T.Text
-    , marguments :: [SExpr]
+    , marguments :: [r]
     } ->
-    SExpr
+    SExprF e r
   SEIfThenElse ::
-    { endLine :: Int
-    , iif :: SExpr
-    , ithen :: SExpr
-    , ielse :: SExpr
+    { iif :: r
+    , ithen :: r
+    , ielse :: r
     } ->
-    SExpr
+    SExprF e r
   SEWhile ::
-    { endLine :: Int
-    , wif :: SExpr
-    , wloop :: SExpr
+    { wif :: r
+    , wloop :: r
     } ->
-    SExpr
+    SExprF e r
   SEBlock ::
-    { endLine :: Int
-    , bexpressions :: NonEmpty SExpr
+    { bexpressions :: NonEmpty r
     } ->
-    SExpr
+    SExprF e r
   SELetIn ::
-    { endLine :: Int
-    , lbindings :: NonEmpty SBinding
-    , lbody :: SExpr
+    { lbinding :: SBinding e
+    , lbody :: r
     } ->
-    SExpr
+    SExprF e r
   SECase ::
-    { endLine :: Int
-    , cexpr :: SExpr
-    , cprongs :: NonEmpty SCaseProng
+    { cexpr :: r
+    , cprongs :: NonEmpty (SCaseProng e)
     } ->
-    SExpr
+    SExprF e r
   SENew ::
-    { endLine :: Int
-    , ntype :: T.Text
+    { ntype :: T.Text
     } ->
-    SExpr
+    SExprF e r
   SEIsVoid ::
-    { endLine :: Int
-    , iexpr :: SExpr
+    { iexpr :: r
     } ->
-    SExpr
+    SExprF e r
   SEPlus ::
-    { endLine :: Int
-    , pleft :: SExpr
-    , pright :: SExpr
+    { pleft :: r
+    , pright :: r
     } ->
-    SExpr
+    SExprF e r
   SEMinus ::
-    { endLine :: Int
-    , mleft :: SExpr
-    , mright :: SExpr
+    { mleft :: r
+    , mright :: r
     } ->
-    SExpr
+    SExprF e r
   SETimes ::
-    { endLine :: Int
-    , tleft :: SExpr
-    , tright :: SExpr
+    { tleft :: r
+    , tright :: r
     } ->
-    SExpr
+    SExprF e r
   SEDivide ::
-    { endLine :: Int
-    , dleft :: SExpr
-    , dright :: SExpr
+    { dleft :: r
+    , dright :: r
     } ->
-    SExpr
+    SExprF e r
   SETilde ::
-    { endLine :: Int
-    , texpr :: SExpr
+    { texpr :: r
     } ->
-    SExpr
+    SExprF e r
   SELt ::
-    { endLine :: Int
-    , lleft :: SExpr
-    , lright :: SExpr
+    { lleft :: r
+    , lright :: r
     } ->
-    SExpr
+    SExprF e r
   SELte ::
-    { endLine :: Int
-    , lleft :: SExpr
-    , lright :: SExpr
+    { lleft :: r
+    , lright :: r
     } ->
-    SExpr
+    SExprF e r
   SEEquals ::
-    { endLine :: Int
-    , eleft :: SExpr
-    , eright :: SExpr
+    { eleft :: r
+    , eright :: r
     } ->
-    SExpr
+    SExprF e r
   SENot ::
-    { endLine :: Int
-    , nexpr :: SExpr
+    { nexpr :: r
     } ->
-    SExpr
+    SExprF e r
   SEBracketed ::
-    { endLine :: Int
-    , bexpr :: SExpr
+    { bexpr :: r
     } ->
-    SExpr
+    SExprF e r
   SEIdentifier ::
-    { endLine :: Int
-    , iid :: T.Text
+    { iid :: T.Text
     } ->
-    SExpr
+    SExprF e r
   SEInteger ::
-    { endLine :: Int
-    , iint :: Integer
+    { iint :: Integer
     } ->
-    SExpr
+    SExprF e r
   SEString ::
-    { endLine :: Int
-    , sstring :: T.Text
+    { sstring :: T.Text
     } ->
-    SExpr
+    SExprF e r
   SEBool ::
-    { endLine :: Int
-    , bbool :: Bool
+    { bbool :: Bool
     } ->
-    SExpr
-  deriving stock (Show)
+    SExprF e r
+  deriving stock (Generic, Functor)
+
+instance (Show e) => Show1 (SExprF e) where
+  liftShowsPrec :: (Int -> a -> ShowS) -> ([a] -> ShowS) -> Int -> SExprF e a -> ShowS
+  -- liftShowsPrec = $(makeLiftShowsPrec ''SExprF)
+  liftShowsPrec = undefined
